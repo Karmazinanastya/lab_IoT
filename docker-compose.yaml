@@ -1,4 +1,4 @@
-name: "road_vision"
+name: "road_vision_full"
 
 services:
   mqtt:
@@ -16,8 +16,73 @@ services:
     build: .
     depends_on:
       - mqtt
+      - hub
     environment:
       MQTT_BROKER_HOST: "mqtt"
       MQTT_BROKER_PORT: 1883
       MQTT_TOPIC: "agent_data_topic"
       DELAY: 1
+
+  postgres_db:
+    image: postgres:16
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: test_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./store/db/structure.sql:/docker-entrypoint-initdb.d/structure.sql
+    ports:
+      - "5433:5432"
+
+  pgadmin:
+    container_name: pgadmin4
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres_db
+
+  store:
+    container_name: store
+    build: ./store
+    depends_on:
+      - postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: test_db
+      POSTGRES_HOST: postgres_db
+      POSTGRES_PORT: 5432
+    ports:
+      - "8000:8000"
+
+  hub:
+    container_name: hub
+    build: ./hub
+    depends_on:
+      - mqtt
+      - store
+    restart: always
+    environment:
+      MQTT_BROKER_HOST: "mqtt"
+      MQTT_BROKER_PORT: 1883
+      MQTT_TOPIC: "agent_data_topic"
+      STORE_API_HOST: "store"
+      STORE_API_PORT: 8000
+      BATCH_SIZE: 10
+      HTTP_PORT: 8001
+    ports:
+      - "8001:8001"
+
+volumes:
+  postgres_data:
+  pgadmin-data:
