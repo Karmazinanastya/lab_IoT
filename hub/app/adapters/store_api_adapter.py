@@ -1,7 +1,8 @@
 import logging
 from typing import List
 import requests
-from app.entities.agent_data import ProcessedAgentData
+
+from app.entities.processed_agent_data import ProcessedAgentData
 from app.interfaces.store_gateway import StoreGateway
 
 
@@ -12,6 +13,7 @@ class StoreApiAdapter(StoreGateway):
 
     def save_data(self, processed_agent_data_batch: List[ProcessedAgentData]) -> bool:
         payload = [item.model_dump(mode="json") for item in processed_agent_data_batch]
+
         try:
             response = requests.post(
                 f"{self.api_base_url}/processed_agent_data/",

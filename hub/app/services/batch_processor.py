@@ -1,7 +1,8 @@
 import logging
 from threading import Lock
 from typing import List
-from app.entities.agent_data import ProcessedAgentData
+
+from app.entities.processed_agent_data import ProcessedAgentData
 from app.interfaces.store_gateway import StoreGateway
 
 
@@ -17,6 +18,7 @@ class BatchProcessor:
             self._buffer.append(item)
             current_size = len(self._buffer)
             logging.info("Buffered item. Current batch size: %s/%s", current_size, self.batch_size)
+
             if current_size < self.batch_size:
                 return False
 
@@ -33,11 +35,13 @@ class BatchProcessor:
         with self._lock:
             if not self._buffer:
                 return True
+
             batch = list(self._buffer)
             if self.store_gateway.save_data(batch):
                 self._buffer.clear()
                 logging.info("Manual flush successful")
                 return True
+
             logging.warning("Manual flush failed")
             return False
 
