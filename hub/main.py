@@ -6,9 +6,8 @@ import paho.mqtt.client as mqtt
 from fastapi import FastAPI
 
 from app.adapters.store_api_adapter import StoreApiAdapter
-from app.entities.agent_data import RawAgentData
+from app.entities.processed_agent_data import ProcessedAgentData
 from app.services.batch_processor import BatchProcessor
-from app.services.road_analyzer import RoadAnalyzer
 from config import (
     BATCH_SIZE,
     HTTP_PORT,
@@ -30,10 +29,9 @@ mqtt_client: mqtt.Client | None = None
 
 
 def handle_payload(payload: str) -> None:
-    raw_data = RawAgentData.model_validate_json(payload)
-    processed_data = RoadAnalyzer.process(raw_data)
+    processed_data = ProcessedAgentData.model_validate_json(payload)
     batch_processor.add(processed_data)
-    logging.info("Processed message with road_state=%s", processed_data.road_state)
+    logging.info("Accepted processed message with road_state=%s", processed_data.road_state)
 
 
 def on_connect(client, userdata, flags, rc):
@@ -88,7 +86,8 @@ def health():
 
 @app.get("/buffer")
 def buffer_state():
-    return {"items": batch_processor.snapshot(), "count": len(batch_processor.snapshot())}
+    data = batch_processor.snapshot()
+    return {"items": data, "count": len(data)}
 
 
 @app.post("/ingest")
@@ -99,5 +98,4 @@ def ingest(payload: dict):
 
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=HTTP_PORT)
