@@ -8,3 +8,4 @@ class AggregatedDataSchema(Schema):
     gps = fields.Nested(GpsSchema)
     parking = fields.Nested(ParkingSchema)
     time = fields.DateTime()
+    user_id = fields.Int()

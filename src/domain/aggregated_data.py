@@ -10,3 +10,4 @@ class AggregatedData:
     gps: Gps
     parking: Parking
     time: datetime
+    user_id: int
