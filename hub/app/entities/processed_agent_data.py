@@ -14,19 +14,20 @@ class GpsData(BaseModel):
 
 
 class AgentData(BaseModel):
+    user_id: int = 1
     accelerometer: AccelerometerData
     gps: GpsData
     timestamp: datetime
 
     @classmethod
-    @field_validator("timestamp", mode="before")
+    @field_validator('timestamp', mode='before')
     def parse_timestamp(cls, value):
         if isinstance(value, datetime):
             return value
         try:
             return datetime.fromisoformat(str(value))
         except (TypeError, ValueError) as exc:
-            raise ValueError("Invalid timestamp format. Expected ISO 8601 datetime.") from exc
+            raise ValueError('Invalid timestamp format. Expected ISO 8601 datetime.') from exc
 
 
 class ProcessedAgentData(BaseModel):

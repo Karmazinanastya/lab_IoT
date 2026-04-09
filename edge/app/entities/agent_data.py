@@ -19,26 +19,38 @@ class ParkingData(BaseModel):
 
 
 class RawAgentData(BaseModel):
+    user_id: int = 1
     accelerometer: AccelerometerData
     gps: GpsData
     parking: ParkingData
     time: datetime
 
     @classmethod
-    @field_validator("time", mode="before")
+    @field_validator('time', mode='before')
     def parse_time(cls, value):
         if isinstance(value, datetime):
             return value
         try:
             return datetime.fromisoformat(str(value))
         except (TypeError, ValueError) as exc:
-            raise ValueError("Invalid time format. Expected ISO 8601 datetime.") from exc
+            raise ValueError('Invalid time format. Expected ISO 8601 datetime.') from exc
 
 
 class AgentData(BaseModel):
+    user_id: int = 1
     accelerometer: AccelerometerData
     gps: GpsData
     timestamp: datetime
+
+    @classmethod
+    @field_validator('timestamp', mode='before')
+    def parse_timestamp(cls, value):
+        if isinstance(value, datetime):
+            return value
+        try:
+            return datetime.fromisoformat(str(value))
+        except (TypeError, ValueError) as exc:
+            raise ValueError('Invalid timestamp format. Expected ISO 8601 datetime.') from exc
 
 
 class ProcessedAgentData(BaseModel):
